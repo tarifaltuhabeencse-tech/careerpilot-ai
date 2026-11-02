@@ -8,7 +8,31 @@
 let token=localStorage.getItem("cp_token")||"", registering=false;const $=id=>document.getElementById(id);
 function note(t,c="notice"){$("notice").textContent=t;$("notice").className=c}
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
-async function api(path,opt={}){let h=new Headers(opt.headers||{});if(token)h.set("Authorization","Bearer "+token);let r=await fetch(path,{...opt,headers:h}),d={};try{d=await r.json()}catch{}if(!r.ok)throw Error(d.detail||"Request failed");return d}
+const API_BASE = "https://careerpilot-ai-3-h880.onrender.com";
+
+async function api(path, opt = {}) {
+    let h = new Headers(opt.headers || {});
+
+    if (token) {
+        h.set("Authorization", "Bearer " + token);
+    }
+
+    let r = await fetch(API_BASE + path, {
+        ...opt,
+        headers: h
+    });
+
+    let d = {};
+    try {
+        d = await r.json();
+    } catch {}
+
+    if (!r.ok) {
+        throw Error(d.detail || "Request failed");
+    }
+
+    return d;
+}
 function signed(email){$("who").textContent=email||"Not signed in";$("auth").classList.toggle("hidden",!!token);$("workspace").classList.toggle("hidden",!token);if(token)historyLoad()}
 $("toggle").onclick=()=>{registering=!registering;$("authTitle").textContent=registering?"Create your account":"Welcome back";$("submitAuth").textContent=registering?"Create account":"Sign in";$("toggle").textContent=registering?"I already have an account":"Create account"}
 $("authForm").onsubmit=async e=>{e.preventDefault();try{let d=await api(registering?"/api/auth/register":"/api/auth/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:$("email").value,password:$("password").value})});token=d.access_token;localStorage.setItem("cp_token",token);signed(d.email);note("Signed in successfully.","notice success")}catch(x){note(x.message,"notice error")}}
